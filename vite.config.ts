@@ -3,8 +3,13 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vite'
 
+// GitHub Pages serves this project at https://<user>.github.io/meditto/, so production
+// assets must be requested from that subpath. Local dev keeps the root path.
+const base = process.env.GITHUB_PAGES ? '/meditto/' : '/'
+
 // https://vite.dev/config/
 export default defineConfig({
+  base,
   plugins: [
     react(),
     tailwindcss(),
@@ -18,7 +23,8 @@ export default defineConfig({
         theme_color: '#1e3a5f',
         background_color: '#0b1a2e',
         display: 'standalone',
-        start_url: '/',
+        start_url: '.',
+        scope: '.',
         icons: [
           {
             src: 'icons/icon-192.svg',

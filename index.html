@@ -2,7 +2,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#6fbdf0" />
     <meta name="description" content="Medito — meditação guiada com respiração, paisagens sonoras e histórico de sessões." />
@@ -18,6 +18,22 @@
         var theme = mode === 'light' || mode === 'dark' ? mode : hour >= 6 && hour < 18 ? 'light' : 'dark'
         document.documentElement.dataset.theme = theme
       })()
+    </script>
+    <script>
+      // Contraparte do redirecionamento em 404.html: decodifica a rota
+      // original da query string e devolve para o React Router.
+      ;(function (l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search
+            .slice(1)
+            .split('&')
+            .map(function (s) {
+              return s.replace(/~and~/g, '&')
+            })
+            .join('?')
+          window.history.replaceState(null, '', l.pathname.slice(0, -1) + decoded + l.hash)
+        }
+      })(window.location)
     </script>
   </head>
   <body>
