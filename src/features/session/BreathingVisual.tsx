@@ -7,8 +7,6 @@ export interface BreathingVisualProps {
   phase: ExtendedPhase
   progress: number // 0..1 elapsed within the current phase
   secondsRemaining: number
-  cycleNumber: number
-  totalCycles: number | null
   isFinal?: boolean
   isPaused: boolean
 }
@@ -49,8 +47,6 @@ export function BreathingVisual({
   phase,
   progress,
   secondsRemaining,
-  cycleNumber,
-  totalCycles,
   isFinal,
   isPaused,
 }: BreathingVisualProps) {
@@ -129,11 +125,6 @@ export function BreathingVisual({
         <span className={showBigNumber ? 'text-6xl font-bold sm:text-7xl' : 'text-4xl font-semibold sm:text-5xl'}>
           {secondsRemaining}
         </span>
-        {totalCycles !== null && phase !== 'rest' && (
-          <span className="text-xs font-medium">
-            Ciclo {Math.min(cycleNumber, totalCycles)} de {totalCycles}
-          </span>
-        )}
       </div>
     </div>
   )

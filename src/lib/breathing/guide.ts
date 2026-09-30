@@ -78,6 +78,34 @@ export const METHOD_GUIDES: Record<MethodKey, MethodGuide> = {
     ],
     tip: 'Evite se tiver pressão alta, glaucoma, enxaqueca ou estiver grávida. Vá com calma na primeira vez — o efeito de "cabeça leve" é esperado, mas deve ser suave.',
   },
+  diafragmatica: {
+    when: [
+      'Para quem está começando a praticar respiração consciente',
+      'Em qualquer momento do dia, como prática de manutenção',
+      'Para reduzir o estresse e a ansiedade no dia a dia',
+    ],
+    how: [
+      'Deite-se ou sente-se e coloque uma mão sobre o abdômen',
+      'Inspire pelo nariz em 4 segundos, sentindo o abdômen expandir (o peito se move pouco)',
+      'Expire pela boca ou nariz em 6 segundos, sentindo o abdômen afundar',
+      'Repita por 3 a 10 minutos, no seu próprio ritmo',
+    ],
+    tip: 'É a base de quase todas as outras técnicas de respiração. Uma das abordagens mais estudadas para estresse e ansiedade — pratique sem pressa para sentir o movimento do abdômen.',
+  },
+  alivio: {
+    when: [
+      'No momento exato de um pico de estresse ou ansiedade',
+      'Para um reset rápido entre tarefas, sem precisar de uma sessão longa',
+      'Antes de uma situação tensa, como último preparo',
+    ],
+    how: [
+      'Inspire pelo nariz normalmente',
+      'Sem soltar o ar, puxe uma segunda golfada curta para completar os pulmões',
+      'Solte todo o ar bem devagar pela boca, o mais longo possível',
+      'Repita apenas algumas vezes — não é feito para sessões longas',
+    ],
+    tip: 'É uma técnica de redução aguda da ativação do corpo, não uma meditação. Poucos ciclos já bastam; use quando precisar de alívio imediato.',
+  },
   descontracao: {
     when: [
       'No exato momento em que a ansiedade aumenta',

@@ -30,10 +30,10 @@ jobs:
       - run: npm run build
         env:
           GITHUB_PAGES: 'true'
-          # Opcionais: defina em Settings → Secrets and variables → Actions
-          # para publicar o app já conectado ao seu projeto Supabase.
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          # Opcionais: defina em Settings → Secrets and variables → Actions, tanto em
+          # "Secrets" quanto em "Variables", para publicar o app já conectado ao Supabase.
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || vars.VITE_SUPABASE_ANON_KEY }}
 
       - uses: actions/configure-pages@v5
 

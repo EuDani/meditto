@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBookOpen, faPlay, faStar as faStarSolid } from '@fortawesome/free-solid-svg-icons'
 import { faStar as faStarRegular } from '@fortawesome/free-regular-svg-icons'
 import { AppShell } from '../../components/AppShell'
 import { GlassCard, Button } from '../../components/ui'
-import { BREATHING_MODULES } from '../../lib/breathing/modules'
+import { BREATHING_MODULES, getModes } from '../../lib/breathing/modules'
 import type { MethodKey } from '../../lib/database.types'
 import { useMethodSettings, useSoundscapes, useUpsertMethodSetting } from '../../lib/queries'
 import { sfx } from '../../lib/sound'
@@ -14,6 +14,7 @@ export function MethodDetailPage() {
   const { key } = useParams<{ key: string }>()
   const navigate = useNavigate()
   const module = BREATHING_MODULES[key as MethodKey]
+  const modes = useMemo(() => (module ? getModes(module) : []), [module])
 
   const { data: settings } = useMethodSettings()
   const { data: soundscapes } = useSoundscapes()
@@ -22,22 +23,42 @@ export function MethodDetailPage() {
   const savedSetting = settings?.find((s) => s.method_key === key)
   const isFavorite = savedSetting?.favorite ?? false
 
-  const [durationSeconds, setDurationSeconds] = useState(
-    savedSetting?.custom_duration_seconds ??
-      (module?.loop.kind === 'continuous-duration' ? module.loop.defaultSeconds : 240),
-  )
-  const [cycles, setCycles] = useState(module?.loop.kind === 'max-cycles' ? module.loop.defaultCycles : 4)
+  const [modeKey, setModeKey] = useState('default')
+  const activeMode = modes.find((m) => m.key === modeKey) ?? modes[0]
+
+  // Reset the mode back to default when navigating between different methods.
+  useEffect(() => {
+    setModeKey('default')
+  }, [module?.key])
+
+  const [durationSeconds, setDurationSeconds] = useState(0)
+  const [cycles, setCycles] = useState(4)
   const [soundscapeId, setSoundscapeId] = useState<string>('')
 
+  // Reset duration/cycles to sensible defaults whenever the chosen mode changes,
+  // since alternate modes can have their own loop shape and ranges.
+  useEffect(() => {
+    if (!activeMode) return
+    if (activeMode.loop.kind === 'continuous-duration') {
+      setDurationSeconds(
+        modeKey === 'default' ? (savedSetting?.custom_duration_seconds ?? activeMode.loop.defaultSeconds) : activeMode.loop.defaultSeconds,
+      )
+    }
+    if (activeMode.loop.kind === 'max-cycles') {
+      setCycles(activeMode.loop.defaultCycles)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modeKey, module?.key])
+
   const phaseSummary = useMemo(() => {
-    if (!module) return ''
-    const { in: i, hold_in, out, hold_out } = module.timings
+    if (!activeMode) return ''
+    const { in: i, hold_in, out, hold_out } = activeMode.timings
     return [`Inspire ${i}s`, hold_in > 0 && `Segure ${hold_in}s`, `Expire ${out}s`, hold_out > 0 && `Segure ${hold_out}s`]
       .filter(Boolean)
       .join(' · ')
-  }, [module])
+  }, [activeMode])
 
-  if (!module) {
+  if (!module || !activeMode) {
     return (
       <AppShell>
         <p className="text-fg">Método não encontrado.</p>
@@ -49,8 +70,9 @@ export function MethodDetailPage() {
     sfx.start()
     navigate(`/session/${module.key}`, {
       state: {
-        durationSeconds: module.loop.kind === 'continuous-duration' ? durationSeconds : undefined,
-        cycles: module.loop.kind === 'max-cycles' ? cycles : undefined,
+        modeKey,
+        durationSeconds: activeMode.loop.kind === 'continuous-duration' ? durationSeconds : undefined,
+        cycles: activeMode.loop.kind === 'max-cycles' ? cycles : undefined,
         soundscapeId: soundscapeId || null,
       },
     })
@@ -66,7 +88,7 @@ export function MethodDetailPage() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-fg">{module.label}</h1>
-          <p className="font-medium text-fg-muted">{module.technique}</p>
+          <p className="font-medium text-fg-muted">{activeMode.technique}</p>
         </div>
         <Link
           to="/guide"
@@ -78,19 +100,39 @@ export function MethodDetailPage() {
       </div>
 
       <GlassCard className="mt-4">
-        <p>{module.description}</p>
+        <p>{activeMode.description}</p>
         <p className="mt-2 text-sm font-medium text-fg-muted">{phaseSummary}</p>
       </GlassCard>
 
-      {module.loop.kind === 'continuous-duration' && (
+      {modes.length > 1 && (
+        <GlassCard className="mt-4">
+          <label className="flex flex-col gap-2 text-sm font-medium">
+            Modo de respiração
+            <select
+              className="rounded-xl border border-line bg-field px-3 py-2 text-fg"
+              value={modeKey}
+              onChange={(e) => setModeKey(e.target.value)}
+            >
+              {modes.map((m) => (
+                <option key={m.key} value={m.key}>
+                  {m.key === 'default' ? `Padrão — ${m.label}` : m.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {activeMode.hint && <p className="mt-2 text-xs text-fg-muted">{activeMode.hint}</p>}
+        </GlassCard>
+      )}
+
+      {activeMode.loop.kind === 'continuous-duration' && (
         <GlassCard className="mt-4">
           <label className="flex flex-col gap-2 text-sm font-medium">
             Duração: {Math.round(durationSeconds / 60)} min
             <input
               type="range"
               className="accent-brand-600"
-              min={module.loop.minSeconds}
-              max={module.loop.maxSeconds}
+              min={activeMode.loop.minSeconds}
+              max={activeMode.loop.maxSeconds}
               step={30}
               value={durationSeconds}
               onChange={(e) => setDurationSeconds(Number(e.target.value))}
@@ -99,15 +141,15 @@ export function MethodDetailPage() {
         </GlassCard>
       )}
 
-      {module.loop.kind === 'max-cycles' && (
+      {activeMode.loop.kind === 'max-cycles' && (
         <GlassCard className="mt-4">
           <label className="flex flex-col gap-2 text-sm font-medium">
             Ciclos: {cycles}
             <input
               type="range"
               className="accent-brand-600"
-              min={module.loop.minCycles}
-              max={module.loop.maxCycles}
+              min={activeMode.loop.minCycles}
+              max={activeMode.loop.maxCycles}
               step={1}
               value={cycles}
               onChange={(e) => setCycles(Number(e.target.value))}
@@ -116,16 +158,16 @@ export function MethodDetailPage() {
         </GlassCard>
       )}
 
-      {module.loop.kind === 'rep-count-then-pause' && (
+      {activeMode.loop.kind === 'rep-count-then-pause' && (
         <GlassCard className="mt-4 text-sm">
-          {module.loop.reps} repetições rápidas, seguidas de {module.loop.pauseSeconds}s de pausa.
+          {activeMode.loop.reps} repetições rápidas, seguidas de {activeMode.loop.pauseSeconds}s de pausa.
         </GlassCard>
       )}
 
-      {module.loop.kind === 'burst-then-final-hold' && (
+      {activeMode.loop.kind === 'burst-then-final-hold' && (
         <GlassCard className="mt-4 text-sm">
-          {module.loop.reps} repetições rápidas, depois 1 inspiração de {module.loop.finalIn}s e retenção de{' '}
-          {module.loop.finalHoldIn}s.
+          {activeMode.loop.reps} repetições rápidas, depois 1 inspiração de {activeMode.loop.finalIn}s e retenção de{' '}
+          {activeMode.loop.finalHoldIn}s.
         </GlassCard>
       )}
 

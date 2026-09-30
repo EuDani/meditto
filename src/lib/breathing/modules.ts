@@ -15,6 +15,17 @@ export type LoopShape =
   | { kind: 'burst-then-final-hold'; reps: number; finalIn: number; finalHoldIn: number }
   | { kind: 'max-cycles'; minCycles: number; maxCycles: number; defaultCycles: number }
 
+/** An alternate breathing pattern offered within the same method category. */
+export interface BreathingMode {
+  key: string
+  label: string
+  technique: string
+  description: string
+  hint: string
+  timings: PhaseTimings
+  loop: LoopShape
+}
+
 export interface BreathingModule {
   key: MethodKey
   label: string
@@ -25,6 +36,8 @@ export interface BreathingModule {
   accentFrom: string
   accentTo: string
   phaseLabels: Record<Phase, string>
+  /** Alternate patterns for the same category, in addition to the module's own default. */
+  alternateModes?: BreathingMode[]
 }
 
 export const PHASE_LABELS_PT: Record<Phase, string> = {
@@ -34,6 +47,8 @@ export const PHASE_LABELS_PT: Record<Phase, string> = {
   hold_out: 'Segure',
 }
 
+const CONTINUOUS_DEFAULT: LoopShape = { kind: 'continuous-duration', minSeconds: 60, maxSeconds: 600, defaultSeconds: 240 }
+
 export const BREATHING_MODULES: Record<MethodKey, BreathingModule> = {
   relaxamento: {
     key: 'relaxamento',
@@ -42,10 +57,22 @@ export const BREATHING_MODULES: Record<MethodKey, BreathingModule> = {
     description:
       'A expiração dura o dobro da inspiração, acalmando o sistema nervoso. Ideal antes de dormir.',
     timings: { in: 4, hold_in: 0, out: 8, hold_out: 0 },
-    loop: { kind: 'continuous-duration', minSeconds: 60, maxSeconds: 600, defaultSeconds: 240 },
+    loop: CONTINUOUS_DEFAULT,
     accentFrom: '#6d5bd0',
     accentTo: '#2f2f6b',
     phaseLabels: PHASE_LABELS_PT,
+    alternateModes: [
+      {
+        key: 'bhramari',
+        label: 'Bhramari (abelha)',
+        technique: 'Bhramari — Respiração da Abelha',
+        description:
+          'Inspire pelo nariz e expire bem devagar fazendo um zumbido suave, como "mmmm". O som prolongado ajuda a manter a atenção enquanto acalma.',
+        hint: 'Experimente com os olhos fechados e os ouvidos levemente tampados, se estiver em um lugar tranquilo.',
+        timings: { in: 4, hold_in: 0, out: 6, hold_out: 0 },
+        loop: CONTINUOUS_DEFAULT,
+      },
+    ],
   },
   equilibrio: {
     key: 'equilibrio',
@@ -53,7 +80,7 @@ export const BREATHING_MODULES: Record<MethodKey, BreathingModule> = {
     technique: 'Respiração Coerente',
     description: 'Inspiração e expiração com a mesma duração, criando coerência cardíaca.',
     timings: { in: 5, hold_in: 0, out: 5, hold_out: 0 },
-    loop: { kind: 'continuous-duration', minSeconds: 60, maxSeconds: 600, defaultSeconds: 240 },
+    loop: CONTINUOUS_DEFAULT,
     accentFrom: '#2b9fd8',
     accentTo: '#1e63b3',
     phaseLabels: PHASE_LABELS_PT,
@@ -75,10 +102,22 @@ export const BREATHING_MODULES: Record<MethodKey, BreathingModule> = {
     technique: 'Box Breathing',
     description: 'Quatro fases iguais de 4 segundos, usada por atletas e militares para concentração.',
     timings: { in: 4, hold_in: 4, out: 4, hold_out: 4 },
-    loop: { kind: 'continuous-duration', minSeconds: 60, maxSeconds: 600, defaultSeconds: 240 },
+    loop: CONTINUOUS_DEFAULT,
     accentFrom: '#2b82db',
     accentTo: '#1a3f6e',
     phaseLabels: PHASE_LABELS_PT,
+    alternateModes: [
+      {
+        key: 'ujjayi',
+        label: 'Ujjayi (oceânica)',
+        technique: 'Ujjayi — Respiração Oceânica',
+        description:
+          'Inspire e expire pelo nariz com uma leve constrição na garganta, criando um som suave de oceano. Tradicional no yoga para sustentar a concentração.',
+        hint: 'Imagine embaçar um espelho com a garganta, mas mantendo a boca fechada e respirando só pelo nariz.',
+        timings: { in: 4, hold_in: 0, out: 4, hold_out: 0 },
+        loop: CONTINUOUS_DEFAULT,
+      },
+    ],
   },
   energia: {
     key: 'energia',
@@ -102,6 +141,30 @@ export const BREATHING_MODULES: Record<MethodKey, BreathingModule> = {
     accentTo: '#2f2f6b',
     phaseLabels: PHASE_LABELS_PT,
   },
+  diafragmatica: {
+    key: 'diafragmatica',
+    label: 'Iniciante',
+    technique: 'Respiração Diafragmática',
+    description:
+      'Respiração lenta usando o diafragma: o abdômen se expande ao inspirar e afunda ao expirar, em vez do peito. Uma das técnicas mais estudadas para estresse e ansiedade — ótima porta de entrada para quem nunca praticou.',
+    timings: { in: 4, hold_in: 0, out: 6, hold_out: 0 },
+    loop: CONTINUOUS_DEFAULT,
+    accentFrom: '#3fae7a',
+    accentTo: '#1f5c42',
+    phaseLabels: PHASE_LABELS_PT,
+  },
+  alivio: {
+    key: 'alivio',
+    label: 'Alívio',
+    technique: 'Suspiro Fisiológico',
+    description:
+      'Uma inspiração seguida de uma segunda puxada curta para completar os pulmões, e depois uma expiração longa. Técnica moderna para reduzir rapidamente a ativação do corpo — um reset, não uma prática longa. Aqui simplificada em inspirar, uma pequena pausa e soltar bem devagar.',
+    timings: { in: 2, hold_in: 0.6, out: 6, hold_out: 0 },
+    loop: { kind: 'max-cycles', minCycles: 3, maxCycles: 6, defaultCycles: 4 },
+    accentFrom: '#c8933f',
+    accentTo: '#8a5a1f',
+    phaseLabels: { ...PHASE_LABELS_PT, hold_in: '+ um pouco de ar' },
+  },
 }
 
 export const BREATHING_MODULES_LIST = Object.values(BREATHING_MODULES)
@@ -109,4 +172,20 @@ export const BREATHING_MODULES_LIST = Object.values(BREATHING_MODULES)
 export function getPhaseLabel(module: BreathingModule, phase: Phase | 'rest'): string {
   if (phase === 'rest') return 'Pausa de recuperação'
   return module.phaseLabels[phase]
+}
+
+/** All selectable breathing modes for a module: its own default pattern, then any alternates. */
+export function getModes(module: BreathingModule): BreathingMode[] {
+  return [
+    {
+      key: 'default',
+      label: module.technique,
+      technique: module.technique,
+      description: module.description,
+      hint: '',
+      timings: module.timings,
+      loop: module.loop,
+    },
+    ...(module.alternateModes ?? []),
+  ]
 }
