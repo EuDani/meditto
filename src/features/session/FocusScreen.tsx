@@ -15,7 +15,7 @@ import {
 import { SkyBackground } from '../../components/SkyBackground'
 import { HeaderControls } from '../../components/HeaderControls'
 import { Button, GlassCard } from '../../components/ui'
-import { BREATHING_MODULES } from '../../lib/breathing/modules'
+import { BREATHING_MODULES, getModes } from '../../lib/breathing/modules'
 import type { MethodKey } from '../../lib/database.types'
 import { useBreathingSession } from '../../lib/breathing/engine'
 import { sfx } from '../../lib/sound'
@@ -24,6 +24,7 @@ import { useCreateSession, useSoundscapes } from '../../lib/queries'
 import { useYoutubeAudioPlayer, YoutubeAudioMount } from '../soundscapes/YoutubeAudioPlayer'
 
 interface SessionRouteState {
+  modeKey?: string
   durationSeconds?: number
   cycles?: number
   soundscapeId?: string | null
@@ -33,8 +34,12 @@ export function FocusScreen() {
   const { key } = useParams<{ key: string }>()
   const location = useLocation()
   const navigate = useNavigate()
-  const module = BREATHING_MODULES[key as MethodKey]
+  const baseModule = BREATHING_MODULES[key as MethodKey]
   const routeState = (location.state as SessionRouteState) ?? {}
+
+  const activeMode = baseModule ? getModes(baseModule).find((m) => m.key === routeState.modeKey) ?? getModes(baseModule)[0] : null
+  // The engine/visual only read timings, loop, accent colors, key and phase labels — merge in the chosen mode's pattern.
+  const module = baseModule && activeMode ? { ...baseModule, technique: activeMode.technique, description: activeMode.description, timings: activeMode.timings, loop: activeMode.loop } : baseModule
 
   const { data: soundscapes } = useSoundscapes()
   const soundscape = soundscapes?.find((s) => s.id === routeState.soundscapeId)
@@ -53,7 +58,7 @@ export function FocusScreen() {
       if (startedAtRef.current) {
         createSession.mutate({
           methodKey: module.key,
-          methodLabel: module.label,
+          methodLabel: activeMode && activeMode.key !== 'default' ? `${module.label} — ${activeMode.label}` : module.label,
           plannedDurationSeconds: session.totalSeconds,
           actualDurationSeconds: elapsedSeconds,
           startedAt: startedAtRef.current,
@@ -164,13 +169,22 @@ export function FocusScreen() {
               phase={session.currentStep?.phase ?? 'in'}
               progress={session.progress}
               secondsRemaining={session.secondsRemaining}
-              cycleNumber={session.cycleNumber}
-              totalCycles={session.totalCycles}
               isFinal={session.currentStep?.isFinal}
               isPaused={session.status === 'paused'}
             />
           )}
         </div>
+
+        {countdown <= 0 && session.totalCycles !== null && (
+          <div className="mb-2 flex flex-col items-center text-fg">
+            <p className="text-sm font-semibold">
+              Set {Math.min(session.cycleNumber, session.totalCycles)} de {session.totalCycles}
+            </p>
+            <p className="text-xs text-fg-muted">
+              {Math.max(session.totalCycles - session.cycleNumber, 0)} sets restantes
+            </p>
+          </div>
+        )}
 
         <div className="flex min-h-12 w-full max-w-sm flex-col items-center gap-4">
           {soundscape && (

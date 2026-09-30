@@ -5,6 +5,8 @@ export type MethodKey =
   | 'foco'
   | 'energia'
   | 'descontracao'
+  | 'diafragmatica'
+  | 'alivio'
 
 export interface Database {
   public: {

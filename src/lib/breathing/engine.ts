@@ -51,7 +51,7 @@ export function buildPlan(module: BreathingModule, options: BreathingSessionOpti
         remaining -= stepDuration
       }
     }
-    return { steps, totalCycles: null, totalSeconds: target }
+    return { steps, totalCycles: cycleIndex, totalSeconds: target }
   }
 
   if (loop.kind === 'rep-count-then-pause') {
