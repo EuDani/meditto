@@ -1,0 +1,127 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme {
+  --font-sans: 'Segoe UI', system-ui, Roboto, sans-serif;
+
+  --color-brand-50: #eef6ff;
+  --color-brand-100: #d9ecff;
+  --color-brand-200: #b7dbff;
+  --color-brand-300: #86c2ff;
+  --color-brand-400: #4fa3f5;
+  --color-brand-500: #2b82db;
+  --color-brand-600: #1e63b3;
+  --color-brand-700: #1a4e8c;
+  --color-brand-800: #1a3f6e;
+  --color-brand-900: #16335a;
+
+  --animate-drift-slow: drift 60s linear infinite;
+  --animate-drift-medium: drift 40s linear infinite;
+  --animate-drift-fast: drift 25s linear infinite;
+
+  @keyframes drift {
+    from {
+      transform: translateX(-10%);
+    }
+    to {
+      transform: translateX(110%);
+    }
+  }
+}
+
+/* Semantic tokens: light = dia, dark = noite */
+:root {
+  color-scheme: light;
+  --fg: #0b1a2e;
+  --fg-muted: #35506e;
+  --card: rgba(255, 255, 255, 0.78);
+  --card-border: rgba(255, 255, 255, 0.95);
+  --field: rgba(255, 255, 255, 0.92);
+  --line: rgba(11, 26, 46, 0.22);
+  --nav: rgba(255, 255, 255, 0.88);
+  --chip: rgba(11, 26, 46, 0.09);
+  --chip-on: #0b1a2e;
+  --chip-on-fg: #ffffff;
+  --btn-secondary: rgba(11, 26, 46, 0.1);
+  --btn-secondary-hover: rgba(11, 26, 46, 0.18);
+  --danger: #b42318;
+  --success: #0f7a4a;
+  --warn-bg: rgba(255, 237, 200, 0.95);
+  --warn-fg: #6b4300;
+  --sky-top: #6fbdf0;
+  --sky-bottom: #eaf6fd;
+  --cloud: #ffffff;
+  --cloud-opacity: 0.9;
+  --page-bg: #eaf6fd;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --fg: #f1f6fb;
+  --fg-muted: #b9c9dc;
+  --card: rgba(7, 16, 36, 0.62);
+  --card-border: rgba(255, 255, 255, 0.16);
+  --field: rgba(255, 255, 255, 0.1);
+  --line: rgba(255, 255, 255, 0.28);
+  --nav: rgba(6, 14, 30, 0.85);
+  --chip: rgba(255, 255, 255, 0.14);
+  --chip-on: #f1f6fb;
+  --chip-on-fg: #0b1a2e;
+  --btn-secondary: rgba(255, 255, 255, 0.15);
+  --btn-secondary-hover: rgba(255, 255, 255, 0.26);
+  --danger: #ffb4ab;
+  --success: #86efac;
+  --warn-bg: rgba(90, 60, 0, 0.6);
+  --warn-fg: #ffe2a3;
+  --sky-top: #050c1f;
+  --sky-bottom: #1c3358;
+  --cloud: #8ea3bf;
+  --cloud-opacity: 0.35;
+  --page-bg: #0b1a2e;
+}
+
+@theme inline {
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-card: var(--card);
+  --color-card-border: var(--card-border);
+  --color-field: var(--field);
+  --color-line: var(--line);
+  --color-nav: var(--nav);
+  --color-chip: var(--chip);
+  --color-chip-on: var(--chip-on);
+  --color-chip-on-fg: var(--chip-on-fg);
+  --color-btn-secondary: var(--btn-secondary);
+  --color-btn-secondary-hover: var(--btn-secondary-hover);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-fg: var(--warn-fg);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--page-bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}

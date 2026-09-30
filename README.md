@@ -46,3 +46,22 @@ Os 6 métodos (Relaxamento, Equilíbrio, Vigor, Foco, Energia, Descontração) e
 
 Cada usuário cadastra suas próprias paisagens sonoras colando um link do YouTube (aba **Sons**). O áudio
 toca em um player oculto (sem vídeo visível) durante a sessão de meditação.
+
+## Deploy no GitHub Pages
+
+O workflow [`deploy-pages.yml`](.github/workflows/deploy-pages.yml) builda e publica o app automaticamente a
+cada push em `main`.
+
+1. No GitHub, vá em **Settings → Pages** e defina *Source* como **GitHub Actions**.
+2. (Opcional, para o app já sair conectado ao Supabase) em **Settings → Secrets and variables → Actions**,
+   crie os secrets `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com os mesmos valores do seu `.env.local`.
+3. Faça push em `main` (ou rode o workflow manualmente em **Actions**). O app fica disponível em
+   `https://<seu-usuário>.github.io/meditto/`.
+
+O build para GitHub Pages usa a variável `GITHUB_PAGES=true` para servir os arquivos em `/meditto/` em vez da
+raiz — isso é feito automaticamente pelo workflow. Rodando `npm run build` sem essa variável (para Vercel,
+Netlify, etc.) o app continua servindo pela raiz normalmente.
+
+Como o GitHub Pages não tem roteamento de servidor, [`public/404.html`](public/404.html) redireciona rotas
+desconhecidas (ex: `/meditto/historico`) de volta para o `index.html`, que devolve a URL original para o
+React Router.
