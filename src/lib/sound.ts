@@ -258,6 +258,10 @@ export const sfx = {
       lowpassTo: 600,
     })
   },
+  /** Tique curto e leve ao trocar de inspirar para expirar (mais agudo ao inspirar, mais grave ao expirar). */
+  switchCue(direction: 'in' | 'out') {
+    tone({ freq: direction === 'in' ? 880 : 659.25, duration: 0.08, gain: 0.035, attack: 0.004 })
+  },
   hold() {
     bell(392, 0.028)
   },

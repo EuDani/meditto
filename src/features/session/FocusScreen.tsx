@@ -2,12 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-  faCircleCheck,
-  faCirclePause,
+  faCalendarDays,
   faHouse,
+  faLightbulb,
   faMusic,
   faPause,
   faPlay,
+  faQuoteLeft,
+  faSeedling,
+  faTrophy,
   faVolumeLow,
   faVolumeXmark,
   faXmark,
@@ -19,6 +22,8 @@ import { BREATHING_MODULES, getModes } from '../../lib/breathing/modules'
 import type { MethodKey } from '../../lib/database.types'
 import { useBreathingSession } from '../../lib/breathing/engine'
 import { sfx } from '../../lib/sound'
+import { useWakeLock } from '../../lib/wakeLock'
+import { MOTIVATIONAL_MESSAGES, REFLECTIONS, pickRandom } from '../../lib/reflections'
 import { BreathingVisual } from './BreathingVisual'
 import { useCreateSession, useSoundscapes } from '../../lib/queries'
 import { useYoutubeAudioPlayer, YoutubeAudioMount } from '../soundscapes/YoutubeAudioPlayer'
@@ -48,8 +53,12 @@ export function FocusScreen() {
   const createSession = useCreateSession()
   const startedAtRef = useRef<string | null>(null)
   const lastCueStepRef = useRef(-1)
-  const [outcome, setOutcome] = useState<{ completed: boolean } | null>(null)
+  const [outcome, setOutcome] = useState<{ completed: boolean; elapsedSeconds: number; sets: number } | null>(null)
   const [countdown, setCountdown] = useState(3)
+  const [closing] = useState(() => ({ message: pickRandom(MOTIVATIONAL_MESSAGES), reflection: pickRandom(REFLECTIONS) }))
+
+  // Mantém a tela acesa durante toda a sessão (útil no celular).
+  useWakeLock(!outcome)
 
   const session = useBreathingSession(module, {
     durationSeconds: routeState.durationSeconds,
@@ -69,7 +78,11 @@ export function FocusScreen() {
       }
       audioPlayer.pause()
       if (completed) sfx.success()
-      setOutcome({ completed })
+      setOutcome({
+        completed,
+        elapsedSeconds,
+        sets: Math.min(session.cycleNumber, session.totalCycles ?? session.cycleNumber),
+      })
     },
   })
 
@@ -93,9 +106,13 @@ export function FocusScreen() {
     if (session.status !== 'running' || !step) return
     if (lastCueStepRef.current === session.stepIndex) return
     lastCueStepRef.current = session.stepIndex
-    if (step.phase === 'in') sfx.inhale(step.duration)
-    else if (step.phase === 'out') sfx.exhale(step.duration)
-    else if (step.phase === 'rest') sfx.rest()
+    if (step.phase === 'in') {
+      if (step.duration >= 1) sfx.switchCue('in')
+      sfx.inhale(step.duration)
+    } else if (step.phase === 'out') {
+      if (step.duration >= 1) sfx.switchCue('out')
+      sfx.exhale(step.duration)
+    } else if (step.phase === 'rest') sfx.rest()
     else sfx.hold()
   }, [session.status, session.stepIndex, step])
 
@@ -108,22 +125,66 @@ export function FocusScreen() {
   }
 
   if (outcome) {
+    const minutes = Math.floor(outcome.elapsedSeconds / 60)
+    const seconds = Math.round(outcome.elapsedSeconds % 60)
+    const duration = minutes > 0 ? `${minutes} min${seconds ? ` ${seconds}s` : ''}` : `${seconds}s`
+
     return (
       <SkyBackground>
-        <div className="flex flex-1 items-center justify-center px-6">
-          <GlassCard className="flex w-full max-w-sm flex-col items-center gap-3 text-center">
-            <FontAwesomeIcon
-              icon={outcome.completed ? faCircleCheck : faCirclePause}
-              className={`text-5xl ${outcome.completed ? 'text-success' : 'text-fg-muted'}`}
-            />
-            <h1 className="text-2xl font-semibold">{outcome.completed ? 'Sessão concluída' : 'Sessão encerrada'}</h1>
-            <p className="font-medium text-fg-muted">
+        <div className="flex flex-1 items-center justify-center px-5 py-8">
+          <GlassCard className="flex w-full max-w-md flex-col items-center gap-4 text-center">
+            <span
+              className={`flex h-20 w-20 items-center justify-center rounded-full text-4xl text-white ${
+                outcome.completed ? 'bg-amber-500' : 'bg-brand-600'
+              }`}
+            >
+              <FontAwesomeIcon icon={outcome.completed ? faTrophy : faSeedling} />
+            </span>
+            <div>
+              <h1 className="text-3xl font-semibold">{outcome.completed ? 'Parabéns!' : 'Sessão encerrada'}</h1>
+              <p className="mt-1 font-medium text-fg-muted">
+                {outcome.completed ? 'Você completou sua meditação.' : 'Cada respiração conta, mesmo as que ficaram pelo caminho.'}
+              </p>
+            </div>
+
+            <div className="grid w-full grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-chip p-3">
+                <p className="text-xl font-semibold">{duration}</p>
+                <p className="text-xs font-medium text-fg-muted">de prática</p>
+              </div>
+              <div className="rounded-2xl bg-chip p-3">
+                <p className="text-xl font-semibold">{outcome.sets}</p>
+                <p className="text-xs font-medium text-fg-muted">{outcome.sets === 1 ? 'set' : 'sets'}</p>
+              </div>
+            </div>
+            <p className="text-sm font-medium text-fg-muted">
               {module.label} · {module.technique}
             </p>
-            <Button onClick={() => navigate('/')} className="mt-2">
-              <FontAwesomeIcon icon={faHouse} />
-              Voltar para o início
-            </Button>
+
+            <div className="w-full rounded-2xl bg-chip p-4 text-left">
+              <FontAwesomeIcon icon={faQuoteLeft} className="mb-2 text-brand-600" />
+              <p>{closing.message}</p>
+            </div>
+
+            <div className="w-full rounded-2xl border border-line p-4 text-left">
+              <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold">
+                <FontAwesomeIcon icon={faLightbulb} className="text-amber-500" />
+                Para refletir
+              </h2>
+              <p className="text-sm">{closing.reflection}</p>
+              <p className="mt-2 text-xs text-fg-muted">Leve um instante para responder a si mesmo, sem pressa.</p>
+            </div>
+
+            <div className="mt-1 flex w-full flex-col gap-2 sm:flex-row">
+              <Button onClick={() => navigate('/')} className="flex-1">
+                <FontAwesomeIcon icon={faHouse} />
+                Voltar para o início
+              </Button>
+              <Button variant="secondary" onClick={() => navigate('/history')} className="flex-1">
+                <FontAwesomeIcon icon={faCalendarDays} />
+                Ver histórico
+              </Button>
+            </div>
           </GlassCard>
         </div>
       </SkyBackground>
